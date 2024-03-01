@@ -121,7 +121,6 @@ impl<'de> serde::de::Visitor<'de> for MonotonicVisitor {
         formatter.write_str("a string, float, an unsigned integer, or a 2-element array")
     }
 
-    #[cfg(not(feature = "as-float-secs"))]
     fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
