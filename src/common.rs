@@ -6,7 +6,7 @@ macro_rules! impl_common {
     ($t: ty) => {
         impl $t {
             #[inline]
-            pub fn abs_diff(self, other: Timestamp) -> Duration {
+            pub fn abs_diff(self, other: $t) -> Duration {
                 if self.0 > other.0 {
                     self.0 - other.0
                 } else {
