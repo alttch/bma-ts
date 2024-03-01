@@ -1,9 +1,10 @@
 [package]
 name = "bma-ts"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Serhij S. <div@altertech.com>"]
-license = "Apache-2.0"
+license = "MIT"
+repository = "https://github.com/alttch/bma-ts"
 description = "Bohemia Automation time library"
 readme = "README.md"
 keywords = ["time", "date"]
