@@ -1,4 +1,4 @@
-# A timestamp object
+# Timestamp/monotonic objects
 
 ## Features
 
@@ -6,10 +6,23 @@
   [serde](https://crates.io/crates/serde)
 
 * **chrono** conversion between [chrono](https://crates.io/crates/chrono)
-  types, also required to parse/deserialize strings
+  types, also required to parse/deserialize strings from human-readable times
 
-* **sqlx** Encoding/Decoding for [sqlx](https://crates.io/crates/sqlx): As
-  integer (nanoseconds) for Sqlite, as TIMESTAMP/TIMESTAMPTZ for PostgreSQL
+* **sqlx** encoding/decoding for [sqlx](https://crates.io/crates/sqlx)
 
-* **as-float-secs** a legacy feature: the default de/serialization and string
-  parsing is to/from float seconds (including integers)
+* **as-float-secs** a legacy feature: the default Timestamp de/serialization
+  and string parsing is to/from float seconds (including integers)
+
+## sqlx encoding/decoding
+
+### Timestamp
+
+* Sqlite: INTEGER (nanoseconds)
+
+* PostgreSQL: TIMESTAMPTZ/TIMESTAMP
+
+### Monotonic
+
+* Sqlite: INTEGER (nanoseconds)
+
+* PostgreSQL: BIGINT (nanoseconds)
