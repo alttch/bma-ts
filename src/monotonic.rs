@@ -39,7 +39,7 @@ impl Monotonic {
     #[cfg(not(target_family = "unix"))]
     #[inline]
     pub fn now_rounded() -> Self {
-        Timestamp::from_secs(STARTED_AT.elapsed().as_secs())
+        Monotonic::from_secs(STARTED_AT.elapsed().as_secs())
     }
     #[inline]
     pub fn elapsed(&self) -> Duration {
