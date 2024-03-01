@@ -1,4 +1,4 @@
-use crate::Timestamp;
+use crate::{Monotonic, Timestamp};
 use sqlx::{
     encode::IsNull,
     error::BoxDynError,
@@ -6,6 +6,8 @@ use sqlx::{
     sqlite::{SqliteArgumentValue, SqliteTypeInfo, SqliteValueRef},
     Decode, Encode, Postgres, Sqlite, Type,
 };
+
+// Timestamp
 
 impl Type<Sqlite> for Timestamp {
     fn type_info() -> SqliteTypeInfo {
@@ -56,5 +58,57 @@ impl<'r> Decode<'r, Postgres> for Timestamp {
     fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
         let us: i64 = Decode::<Postgres>::decode(value)?;
         Ok(Timestamp::from_micros((us + J2000_EPOCH_US).try_into()?))
+    }
+}
+
+impl Type<Sqlite> for Monotonic {
+    fn type_info() -> SqliteTypeInfo {
+        <i64 as Type<Sqlite>>::type_info()
+    }
+    fn compatible(ty: &SqliteTypeInfo) -> bool {
+        *ty == <i64 as Type<Sqlite>>::type_info()
+            || *ty == <i32 as Type<Sqlite>>::type_info()
+            || *ty == <i16 as Type<Sqlite>>::type_info()
+            || *ty == <i8 as Type<Sqlite>>::type_info()
+    }
+}
+impl<'q> Encode<'q, Sqlite> for Monotonic {
+    fn encode_by_ref(&self, args: &mut Vec<SqliteArgumentValue<'q>>) -> IsNull {
+        args.push(SqliteArgumentValue::Int64(
+            (*self).try_into().expect("timestamp too large"),
+        ));
+        IsNull::No
+    }
+}
+impl<'r> Decode<'r, Sqlite> for Monotonic {
+    fn decode(value: SqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+        let value = <i64 as Decode<Sqlite>>::decode(value)?;
+        Ok(value.try_into()?)
+    }
+}
+
+// Monotonic
+
+impl Type<Postgres> for Monotonic {
+    fn type_info() -> PgTypeInfo {
+        PgTypeInfo::with_name("INT8")
+    }
+    fn compatible(ty: &PgTypeInfo) -> bool {
+        *ty == PgTypeInfo::with_name("INT8") || *ty == PgTypeInfo::with_name("BIGINT")
+    }
+}
+impl Encode<'_, Postgres> for Monotonic {
+    fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> IsNull {
+        let us = i64::try_from(self.as_nanos()).expect("timestamp too large");
+        Encode::<Postgres>::encode(us, buf)
+    }
+    fn size_hint(&self) -> usize {
+        std::mem::size_of::<i64>()
+    }
+}
+impl<'r> Decode<'r, Postgres> for Monotonic {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
+        let ns: i64 = Decode::<Postgres>::decode(value)?;
+        Ok(Monotonic::from_nanos(ns.try_into()?))
     }
 }

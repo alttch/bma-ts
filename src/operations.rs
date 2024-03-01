@@ -1,38 +1,45 @@
 use std::ops;
 use std::time::Duration;
 
-use crate::Timestamp;
+use crate::{Monotonic, Timestamp};
 
-impl ops::Add<Duration> for Timestamp {
-    type Output = Timestamp;
+macro_rules! impl_common_operations {
+    ($t: ty) => {
+        impl ops::Add<Duration> for $t {
+            type Output = $t;
 
-    fn add(self, rhs: Duration) -> Self::Output {
-        Self(self.0 + rhs)
-    }
+            fn add(self, rhs: Duration) -> Self::Output {
+                Self(self.0 + rhs)
+            }
+        }
+
+        impl ops::Sub<Duration> for $t {
+            type Output = $t;
+
+            fn sub(self, rhs: Duration) -> Self::Output {
+                Self(self.0 - rhs)
+            }
+        }
+
+        impl Default for $t {
+            fn default() -> Self {
+                Self::now()
+            }
+        }
+
+        impl AsRef<Duration> for $t {
+            fn as_ref(&self) -> &Duration {
+                &self.0
+            }
+        }
+
+        impl AsRef<$t> for $t {
+            fn as_ref(&self) -> &$t {
+                self
+            }
+        }
+    };
 }
 
-impl ops::Sub<Duration> for Timestamp {
-    type Output = Timestamp;
-
-    fn sub(self, rhs: Duration) -> Self::Output {
-        Self(self.0 - rhs)
-    }
-}
-
-impl Default for Timestamp {
-    fn default() -> Self {
-        Self::now()
-    }
-}
-
-impl AsRef<Duration> for Timestamp {
-    fn as_ref(&self) -> &Duration {
-        &self.0
-    }
-}
-
-impl AsRef<Timestamp> for Timestamp {
-    fn as_ref(&self) -> &Timestamp {
-        self
-    }
-}
+impl_common_operations!(Timestamp);
+impl_common_operations!(Monotonic);
