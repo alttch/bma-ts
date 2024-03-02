@@ -13,11 +13,23 @@ macro_rules! impl_common_operations {
             }
         }
 
+        impl ops::AddAssign<Duration> for $t {
+            fn add_assign(&mut self, rhs: Duration) {
+                self.0 = self.0 + rhs;
+            }
+        }
+
         impl ops::Sub<Duration> for $t {
             type Output = $t;
 
             fn sub(self, rhs: Duration) -> Self::Output {
                 Self(self.0 - rhs)
+            }
+        }
+
+        impl ops::SubAssign<Duration> for $t {
+            fn sub_assign(&mut self, rhs: Duration) {
+                self.0 = self.0 - rhs;
             }
         }
 
