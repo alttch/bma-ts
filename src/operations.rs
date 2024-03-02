@@ -21,6 +21,14 @@ macro_rules! impl_common_operations {
             }
         }
 
+        impl ops::Sub<$t> for $t {
+            type Output = $t;
+
+            fn sub(self, rhs: $t) -> Self::Output {
+                Self(self.0 - rhs.0)
+            }
+        }
+
         impl Default for $t {
             fn default() -> Self {
                 Self::now()
