@@ -2,7 +2,7 @@ use crate::{Monotonic, Timestamp};
 use sqlx::{
     encode::IsNull,
     error::BoxDynError,
-    postgres::{PgArgumentBuffer, PgTypeInfo, PgValueRef},
+    postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueRef},
     sqlite::{SqliteArgumentValue, SqliteTypeInfo, SqliteValueRef},
     Decode, Encode, Postgres, Sqlite, Type,
 };
@@ -35,6 +35,8 @@ impl<'r> Decode<'r, Sqlite> for Timestamp {
     }
 }
 
+const J2000_EPOCH_US: i64 = 946_684_800_000_000;
+
 impl Type<Postgres> for Timestamp {
     fn type_info() -> PgTypeInfo {
         PgTypeInfo::with_name("TIMESTAMPTZ")
@@ -43,7 +45,16 @@ impl Type<Postgres> for Timestamp {
         *ty == PgTypeInfo::with_name("TIMESTAMPTZ") || *ty == PgTypeInfo::with_name("TIMESTAMP")
     }
 }
-const J2000_EPOCH_US: i64 = 946_684_800_000_000;
+
+impl PgHasArrayType for Timestamp {
+    fn array_type_info() -> PgTypeInfo {
+        PgTypeInfo::with_name("_TIMESTAMPTZ")
+    }
+
+    fn array_compatible(ty: &PgTypeInfo) -> bool {
+        *ty == PgTypeInfo::with_name("_TIMESTAMPTZ") || *ty == PgTypeInfo::with_name("_TIMESTAMP")
+    }
+}
 
 impl Encode<'_, Postgres> for Timestamp {
     fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> IsNull {
@@ -60,6 +71,8 @@ impl<'r> Decode<'r, Postgres> for Timestamp {
         Ok(Timestamp::from_micros((us + J2000_EPOCH_US).try_into()?))
     }
 }
+
+// Monotonic
 
 impl Type<Sqlite> for Monotonic {
     fn type_info() -> SqliteTypeInfo {
@@ -87,16 +100,18 @@ impl<'r> Decode<'r, Sqlite> for Monotonic {
     }
 }
 
-// Monotonic
-
 impl Type<Postgres> for Monotonic {
     fn type_info() -> PgTypeInfo {
         PgTypeInfo::with_name("INT8")
     }
-    fn compatible(ty: &PgTypeInfo) -> bool {
-        *ty == PgTypeInfo::with_name("INT8") || *ty == PgTypeInfo::with_name("BIGINT")
+}
+
+impl PgHasArrayType for Monotonic {
+    fn array_type_info() -> PgTypeInfo {
+        PgTypeInfo::with_name("_INT8")
     }
 }
+
 impl Encode<'_, Postgres> for Monotonic {
     fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> IsNull {
         let us = i64::try_from(self.as_nanos()).expect("timestamp too large");
@@ -106,6 +121,7 @@ impl Encode<'_, Postgres> for Monotonic {
         std::mem::size_of::<i64>()
     }
 }
+
 impl<'r> Decode<'r, Postgres> for Monotonic {
     fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
         let ns: i64 = Decode::<Postgres>::decode(value)?;
