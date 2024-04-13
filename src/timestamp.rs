@@ -5,6 +5,8 @@ use crate::Error;
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Timestamp(pub(crate) Duration);
 
+const ANSI_EPOCH_DIFF_NANOS: u64 = 11_644_473_600_000_000_000;
+
 impl Timestamp {
     /// # Panics
     ///
@@ -28,5 +30,36 @@ impl Timestamp {
         } else {
             Err(Error::TimeWentBackward)
         }
+    }
+    /// Converts between ANSI (Windows, 1601-01-01) and UNIX (1970-01-01) timestamps
+    /// The source timestamp MUST be in nanoseconds (for Windows timestamp - multiply the source by
+    /// 100)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use bma_ts::Timestamp;
+    ///
+    /// let windows_timestamp = 133_575_013_473_650_000;
+    /// let unix_timestamp = Timestamp::from_nanos(windows_timestamp * 100)
+    ///     .try_from_ansi_to_unix().unwrap();
+    /// assert_eq!(unix_timestamp.as_nanos(), 1_713_027_747_365_000_000);
+    /// ```
+    pub fn try_from_ansi_to_unix(self) -> Result<Self, Error> {
+        Ok(Self(Duration::from_nanos(
+            u64::try_from(self.0.as_nanos())?
+                .checked_sub(ANSI_EPOCH_DIFF_NANOS)
+                .ok_or_else(|| Error::Convert("Failed to convert from ANSI to UNIX".to_string()))?,
+        )))
+    }
+    /// Converts between UNIX (1970-01-01) and ANSI (Windows, 1601-01-01) timestamps
+    ///
+    /// The result timestamp is in nanoseconds (for Windows timestamp - divide the target by 100)
+    pub fn try_from_unix_to_ansi(self) -> Result<Self, Error> {
+        Ok(Self(Duration::from_nanos(
+            u64::try_from(self.0.as_nanos())?
+                .checked_add(ANSI_EPOCH_DIFF_NANOS)
+                .ok_or_else(|| Error::Convert("Failed to convert from UNIX to ANSI".to_string()))?,
+        )))
     }
 }
