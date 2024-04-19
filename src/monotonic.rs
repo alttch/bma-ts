@@ -45,4 +45,8 @@ impl Monotonic {
     pub fn elapsed(&self) -> Duration {
         Self::now().0 - self.0
     }
+    #[inline]
+    pub fn duration_since(&self, earlier: Self) -> Duration {
+        self.0 - earlier.0
+    }
 }

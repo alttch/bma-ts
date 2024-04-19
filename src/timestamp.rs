@@ -31,6 +31,14 @@ impl Timestamp {
             Err(Error::TimeWentBackward)
         }
     }
+    #[inline]
+    pub fn duration_since(self, earlier: Self) -> Result<Duration, Error> {
+        if self >= earlier {
+            Ok(self.0 - earlier.0)
+        } else {
+            Err(Error::TimeWentBackward)
+        }
+    }
     /// Converts between ANSI (Windows, 1601-01-01) and UNIX (1970-01-01) timestamps
     /// The source timestamp MUST be in nanoseconds (for Windows timestamp - multiply the source by
     /// 100)
