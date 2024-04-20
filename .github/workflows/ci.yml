@@ -6,9 +6,20 @@ on:
   pull_request:
 
 env:
+  rust_toolchain: "1.66.0"
   CARGO_TERM_COLOR: always
 
 jobs:
+  setup-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.rust_toolchain }}
+          profile: minimal
+          override: true
   test:
     runs-on: ubuntu-latest
     steps:
