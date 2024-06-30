@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use crate::{Error, Monotonic, Timestamp};
 
-#[cfg(feature = "chrono")]
+#[cfg(feature = "dateparser")]
 impl FromStr for Timestamp {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
