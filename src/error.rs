@@ -4,8 +4,11 @@ use std::num::{ParseFloatError, ParseIntError, TryFromIntError};
 pub enum Error {
     #[error("timestamp parse failed {0}")]
     Parse(String),
-    #[error("timestamp conversion failed")]
+    #[error("conversion failed")]
     ConvertChrono,
+    #[cfg(feature = "time")]
+    #[error("conversion failed: {0}")]
+    ConvertTime(#[from] time::error::ComponentRange),
     #[error("timestamp number conversion failed: {0}")]
     Convert(String),
     #[error("time went backward")]

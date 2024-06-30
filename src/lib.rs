@@ -12,6 +12,8 @@ mod impl_chrono;
 mod impl_serde;
 #[cfg(feature = "sqlx")]
 mod impl_sqlx;
+#[cfg(feature = "time")]
+mod impl_time;
 mod monotonic;
 mod operations;
 #[cfg(test)]
