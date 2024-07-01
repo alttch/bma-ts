@@ -3,14 +3,13 @@ use std::time::Duration;
 use super::{Error, Timestamp};
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
 
-const NANOS_IN_SEC_U32: u32 = 1_000_000_000;
-
 impl TryFrom<Timestamp> for NaiveDateTime {
     type Error = Error;
     #[inline]
     fn try_from(t: Timestamp) -> Result<Self, Self::Error> {
-        NaiveDateTime::from_timestamp_opt(i64::try_from(t.0.as_secs())?, t.0.subsec_nanos())
-            .ok_or(Error::ConvertChrono)
+        let d = DateTime::from_timestamp(i64::try_from(t.0.as_secs())?, t.0.subsec_nanos())
+            .ok_or(Error::ConvertChrono)?;
+        Ok(d.naive_utc())
     }
 }
 impl TryFrom<Timestamp> for DateTime<Utc> {
@@ -31,20 +30,20 @@ impl TryFrom<Timestamp> for DateTime<Local> {
 impl TryFrom<NaiveDateTime> for Timestamp {
     type Error = Error;
     fn try_from(datetime: NaiveDateTime) -> Result<Self, Self::Error> {
-        let duration_sec = Duration::from_secs(u64::try_from(datetime.timestamp())?);
-        let duration_nanos = Duration::from_nanos(u64::from(
-            datetime.timestamp_subsec_nanos() / NANOS_IN_SEC_U32,
-        ));
-        Ok(Self(duration_sec + duration_nanos))
+        let duration_nanos = Duration::from_secs(u64::try_from(
+            datetime
+                .and_utc()
+                .timestamp_nanos_opt()
+                .ok_or(Error::ConvertChrono)?,
+        )?);
+        Ok(Self(duration_nanos))
     }
 }
 impl TryFrom<DateTime<Utc>> for Timestamp {
     type Error = Error;
     fn try_from(datetime: DateTime<Utc>) -> Result<Self, Self::Error> {
         let duration_sec = Duration::from_secs(u64::try_from(datetime.timestamp())?);
-        let duration_nanos = Duration::from_nanos(u64::from(
-            datetime.timestamp_subsec_nanos() / NANOS_IN_SEC_U32,
-        ));
+        let duration_nanos = Duration::from_nanos(u64::from(datetime.timestamp_subsec_nanos()));
         Ok(Self(duration_sec + duration_nanos))
     }
 }
@@ -52,9 +51,7 @@ impl TryFrom<DateTime<Local>> for Timestamp {
     type Error = Error;
     fn try_from(datetime: DateTime<Local>) -> Result<Self, Self::Error> {
         let duration_sec = Duration::from_secs(u64::try_from(datetime.timestamp())?);
-        let duration_nanos = Duration::from_nanos(u64::from(
-            datetime.timestamp_subsec_nanos() / NANOS_IN_SEC_U32,
-        ));
+        let duration_nanos = Duration::from_nanos(u64::from(datetime.timestamp_subsec_nanos()));
         Ok(Self(duration_sec + duration_nanos))
     }
 }
