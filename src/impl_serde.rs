@@ -11,7 +11,7 @@ impl Serialize for Timestamp {
     where
         S: Serializer,
     {
-        serializer.serialize_u128(self.as_nanos())
+        serializer.serialize_u64(self.as_nanos().try_into().unwrap())
     }
 }
 
@@ -30,7 +30,7 @@ impl Serialize for Monotonic {
     where
         S: Serializer,
     {
-        serializer.serialize_u128(self.as_nanos())
+        serializer.serialize_u64(self.as_nanos().try_into().unwrap())
     }
 }
 
