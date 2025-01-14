@@ -3,7 +3,7 @@ pub struct Monotonic(pub(crate) Duration);
 
 use std::time::Duration;
 #[cfg(not(target_family = "unix"))]
-use std::time::Instant;
+use instant::Instant;
 
 #[cfg(not(target_family = "unix"))]
 static STARTED_AT: once_cell::sync::Lazy<Instant> = once_cell::sync::Lazy::new(|| Instant::now());
