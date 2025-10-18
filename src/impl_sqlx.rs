@@ -1,11 +1,13 @@
 use crate::{Monotonic, Timestamp};
 use sqlx::{
+    Decode, Encode, Postgres, Sqlite, Type,
     encode::IsNull,
     error::BoxDynError,
     postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueRef},
     sqlite::{SqliteArgumentValue, SqliteTypeInfo, SqliteValueRef},
-    Decode, Encode, Postgres, Sqlite, Type,
 };
+
+type ResultIsNull = Result<IsNull, Box<(dyn std::error::Error + Send + Sync + 'static)>>;
 
 // Timestamp
 
@@ -21,11 +23,11 @@ impl Type<Sqlite> for Timestamp {
     }
 }
 impl<'q> Encode<'q, Sqlite> for Timestamp {
-    fn encode_by_ref(&self, args: &mut Vec<SqliteArgumentValue<'q>>) -> IsNull {
+    fn encode_by_ref(&self, args: &mut Vec<SqliteArgumentValue<'q>>) -> ResultIsNull {
         args.push(SqliteArgumentValue::Int64(
             (*self).try_into().expect("timestamp too large"),
         ));
-        IsNull::No
+        Ok(IsNull::No)
     }
 }
 impl<'r> Decode<'r, Sqlite> for Timestamp {
@@ -57,7 +59,7 @@ impl PgHasArrayType for Timestamp {
 }
 
 impl Encode<'_, Postgres> for Timestamp {
-    fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> IsNull {
+    fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> ResultIsNull {
         let us = i64::try_from(self.as_micros()).expect("timestamp too large") - J2000_EPOCH_US;
         Encode::<Postgres>::encode(us, buf)
     }
@@ -86,11 +88,11 @@ impl Type<Sqlite> for Monotonic {
     }
 }
 impl<'q> Encode<'q, Sqlite> for Monotonic {
-    fn encode_by_ref(&self, args: &mut Vec<SqliteArgumentValue<'q>>) -> IsNull {
+    fn encode_by_ref(&self, args: &mut Vec<SqliteArgumentValue<'q>>) -> ResultIsNull {
         args.push(SqliteArgumentValue::Int64(
             (*self).try_into().expect("timestamp too large"),
         ));
-        IsNull::No
+        Ok(IsNull::No)
     }
 }
 impl<'r> Decode<'r, Sqlite> for Monotonic {
@@ -113,7 +115,7 @@ impl PgHasArrayType for Monotonic {
 }
 
 impl Encode<'_, Postgres> for Monotonic {
-    fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> IsNull {
+    fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> ResultIsNull {
         let us = i64::try_from(self.as_nanos()).expect("timestamp too large");
         Encode::<Postgres>::encode(us, buf)
     }
