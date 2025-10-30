@@ -1,12 +1,14 @@
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Monotonic(pub(crate) Duration);
 
-#[cfg(not(target_family = "unix"))]
-use instant::Instant;
 use std::time::Duration;
+#[cfg(target_family = "windows")]
+use std::time::Instant;
+#[cfg(target_family = "wasm")]
+use web_time::Instant;
 
 #[cfg(not(target_family = "unix"))]
-static STARTED_AT: once_cell::sync::Lazy<Instant> = once_cell::sync::Lazy::new(|| Instant::now());
+static STARTED_AT: std::sync::LazyLock<Instant> = std::sync::LazyLock::new(|| Instant::now());
 
 impl Monotonic {
     /// On non-UNIX platforms returns time since the first access
