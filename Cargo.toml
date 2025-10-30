@@ -1,6 +1,6 @@
 [package]
 name = "bma-ts"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 authors = ["Serhij S. <div@altertech.com>"]
 license = "MIT"
@@ -19,7 +19,7 @@ features = ["full"]
 chrono = { version = "0.4", optional = true }
 dateparser = { version = "0.2", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
-sqlx = { version = "0.8", optional = true, features = ["postgres", "sqlite"] }
+sqlx = { version = "0.8", optional = true, features = ["postgres", "sqlite"], default-features = false }
 thiserror = "1.0"
 
 [target.'cfg(not(unix))'.dependencies]
