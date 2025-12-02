@@ -6,6 +6,8 @@ pub use timestamp::Timestamp;
 mod common;
 mod convert;
 mod error;
+#[cfg(feature = "bincode")]
+mod impl_bincode;
 #[cfg(feature = "chrono")]
 mod impl_chrono;
 #[cfg(feature = "serde")]
