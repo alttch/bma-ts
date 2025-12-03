@@ -69,6 +69,9 @@ impl<C> Decode<C> for Monotonic {
     }
 }
 
+bincode::impl_borrow_decode!(Timestamp);
+bincode::impl_borrow_decode!(Monotonic);
+
 #[cfg(test)]
 mod tests {
     use super::{Monotonic, Timestamp};
