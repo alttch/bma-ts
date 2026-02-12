@@ -1,6 +1,6 @@
 [package]
 name = "bma-ts"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2024"
 authors = ["Serhij S. <div@altertech.com>"]
 license = "MIT"
@@ -16,7 +16,6 @@ features = ["full"]
 features = ["full"]
 
 [dependencies]
-bincode = { version = "2.0.1", optional = true }
 chrono = { version = "0.4", optional = true }
 dateparser = { version = "0.2", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
@@ -33,7 +32,6 @@ web-time = "1.1"
 [features]
 #default = [ "full" ]
 chrono = ["dep:chrono", "dateparser"]
-full = [ "chrono", "serde", "bincode", "sqlx" ]
+full = [ "chrono", "serde", "sqlx" ]
 as-float-secs = []
 serde = ["dep:serde"]
-bincode = ["dep:bincode"]
