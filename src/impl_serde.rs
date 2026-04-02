@@ -40,7 +40,7 @@ impl<'de> serde::de::Visitor<'de> for TimestampVisitor {
     type Value = Timestamp;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("a string, float, an unsigned integer, or a 2-element array")
+        formatter.write_str("a string, float, a signed or unsigned integer, or a 2-element array")
     }
 
     #[cfg(not(feature = "as-float-secs"))]
@@ -51,12 +51,31 @@ impl<'de> serde::de::Visitor<'de> for TimestampVisitor {
         Ok(value.into())
     }
 
+    #[cfg(not(feature = "as-float-secs"))]
+    fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Timestamp::try_from(value).map_err(serde::de::Error::custom)
+    }
+
     #[cfg(feature = "as-float-secs")]
     fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
         Ok(Timestamp::from_secs(value))
+    }
+
+    #[cfg(feature = "as-float-secs")]
+    fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        let secs = u64::try_from(value).map_err(|_| {
+            serde::de::Error::custom("signed seconds must be non-negative for Timestamp")
+        })?;
+        Ok(Timestamp::from_secs(secs))
     }
 
     fn visit_f32<E>(self, value: f32) -> Result<Self::Value, E>
@@ -118,7 +137,7 @@ impl<'de> serde::de::Visitor<'de> for MonotonicVisitor {
     type Value = Monotonic;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("a string, float, an unsigned integer, or a 2-element array")
+        formatter.write_str("a string, float, a signed or unsigned integer, or a 2-element array")
     }
 
     fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
@@ -126,6 +145,13 @@ impl<'de> serde::de::Visitor<'de> for MonotonicVisitor {
         E: serde::de::Error,
     {
         Ok(value.into())
+    }
+
+    fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Monotonic::try_from(value).map_err(serde::de::Error::custom)
     }
 
     fn visit_f32<E>(self, value: f32) -> Result<Self::Value, E>
@@ -179,5 +205,27 @@ impl<'de> Deserialize<'de> for Monotonic {
         D: Deserializer<'de>,
     {
         deserializer.deserialize_any(MonotonicVisitor)
+    }
+}
+
+#[cfg(test)]
+mod i64_roundtrip_tests {
+    use serde_json::json;
+
+    use crate::Monotonic;
+
+    #[cfg(not(feature = "as-float-secs"))]
+    #[test]
+    fn timestamp_deserializes_json_integer_as_i64_nanos() {
+        let v = json!(1_700_000_000_000_000_000_i64);
+        let ts: crate::Timestamp = serde_json::from_value(v).unwrap();
+        assert_eq!(ts.as_nanos(), 1_700_000_000_000_000_000_u128);
+    }
+
+    #[test]
+    fn monotonic_deserializes_json_integer_as_i64_nanos() {
+        let v = json!(42_i64);
+        let m: Monotonic = serde_json::from_value(v).unwrap();
+        assert_eq!(m.as_nanos(), 42_u128);
     }
 }
